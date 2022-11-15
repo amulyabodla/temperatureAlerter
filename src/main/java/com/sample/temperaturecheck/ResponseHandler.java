@@ -18,16 +18,16 @@ public class ResponseHandler {
         Map<String, Object> map = new HashMap<String, Object>();
         String time = new SimpleDateFormat("yyyy//MM/dd HH:mm:ss").format(timestamp);
 
-        map.put("overtemp",true);
-        map.put("device_id",deviceID);
         map.put("formatted_time", time);
+        map.put("device_id",deviceID);
+        map.put("overtemp",true);
 
         return new ResponseEntity<Object>(map,HttpStatus.OK);
     }
 
     public static ResponseEntity<Object> generateResponse_BelowTemp(){
         Map<String, Boolean> map = new HashMap<String, Boolean>();
-        //map.put("overtemp", false);
+        map.put("overtemp", false);
         return new ResponseEntity<Object>(map, HttpStatus.OK);
     }
 }

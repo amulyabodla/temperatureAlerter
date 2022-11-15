@@ -1,15 +1,10 @@
 package com.sample.temperaturecheck;
 
-import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Optional;
-import com.sample.temperaturecheck.Error;
 
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -38,6 +33,8 @@ public class DeviceController {
                 temperature = Double.parseDouble(input[3]);
                 timestamp = Long.parseLong(input[1]);
         }catch(Exception e){
+            System.out.println("Inside try catch");
+            addToErrors(data.getData());
            return ResponseHandler.generateResponse_Bad("Successfully added data!");
         }
             device.setDeviceID(deviceID);
@@ -45,6 +42,7 @@ public class DeviceController {
             device.setTimestamp(timestamp);
             deviceRepo.save(device);  
         if(!validateInput(input)){
+            addToErrors(data.getData());
             return ResponseHandler.generateResponse_Bad("Successfully added data!");
         }
         if(checkTemperatureConstraint(temperature)){
@@ -53,7 +51,6 @@ public class DeviceController {
         else {
             return ResponseHandler.generateResponse_BelowTemp();
         }
-        //return  ResponseEntity.status(HttpStatus.OK).header("null", "sjadas").body("Hi");
     }
 
     @RequestMapping(value = "/errors", method = RequestMethod.DELETE)
@@ -62,7 +59,7 @@ public class DeviceController {
     }
 
     public boolean validateInput(String[] inputStrings){
-        if(inputStrings.length != 4 || !(inputStrings[2].equals("Temperature")))
+        if(inputStrings.length != 4 || !(inputStrings[2].equals("'Temperature'")))
             return false;
         return true;
     }
@@ -76,18 +73,21 @@ public class DeviceController {
     public void addToErrors(String resp){
         Error error = new Error();
        /* StringBuilder sb = new StringBuilder();
-        if(errorRepository.findById(1) != null)
+        if(errorRepository.findbyError_id(1) != null)
         {
+            System.out.println("Inside if condition");
+            System.out.println(errorRepository.findById(1).toString());
             Optional<Error> ent = errorRepository.findById(1);
+            System.out.println(ent.toString());
             sb.append(ent.get().getError_id());
             errorRepository.deleteById(1);
         }
         else {
             sb.append(resp);
         }
+        System.out.println("Adding finally");
         error.setError_id(1);
         error.setError_txt(sb.toString());
         errorRepository.save(error); */
-    }
 
 }
