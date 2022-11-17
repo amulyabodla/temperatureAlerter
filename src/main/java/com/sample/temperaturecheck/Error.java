@@ -7,6 +7,7 @@ import lombok.Data;
 @Document("errors")
 @Data
 public class Error {
-    private Integer error_id;
+    @Id
+    private Integer errorid;
     private String error_txt; 
 }

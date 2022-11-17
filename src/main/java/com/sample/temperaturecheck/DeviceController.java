@@ -1,6 +1,6 @@
 package com.sample.temperaturecheck;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +17,16 @@ public class DeviceController {
     @Autowired
     private ErrorRepository errorRepository;
     @RequestMapping(value = "/errors",method = RequestMethod.GET)
-    public List<Error> getDevices(){
-       return errorRepository.findAll();
+    public ErrorResponse getDevices(){
+        ErrorResponse errorResponse = new ErrorResponse();
+        if (errorRepository.findAll().size() > 0)
+            errorResponse.setErrors(Arrays.asList(errorRepository.findAll().get(0).getError_txt().split(",")));
+        return errorResponse;
+    }
+
+    @RequestMapping(value = "/temp", method = RequestMethod.DELETE)
+    public void clearDevicesCollection(){
+        deviceRepo.deleteAll();
     }
 
     @RequestMapping(value = "/temp", method = RequestMethod.POST)
@@ -28,23 +36,25 @@ public class DeviceController {
         String input[] = data.getData().split(":");
         Device device = new Device();
         Integer deviceID; Double temperature; Long timestamp;
+
+        if (!validateInput(input)) {
+            addToErrors(data.getData());
+            return ResponseHandler.generateResponse_Bad();
+        }
+        
         try{
                 deviceID = Integer.parseInt(input[0]);
                 temperature = Double.parseDouble(input[3]);
                 timestamp = Long.parseLong(input[1]);
         }catch(Exception e){
-            System.out.println("Inside try catch");
             addToErrors(data.getData());
-           return ResponseHandler.generateResponse_Bad("Successfully added data!");
+            return ResponseHandler.generateResponse_Bad();
         }
             device.setDeviceID(deviceID);
             device.setTemperature(temperature);
             device.setTimestamp(timestamp);
             deviceRepo.save(device);  
-        if(!validateInput(input)){
-            addToErrors(data.getData());
-            return ResponseHandler.generateResponse_Bad("Successfully added data!");
-        }
+        
         if(checkTemperatureConstraint(temperature)){
             return ResponseHandler.generateResponse_OverTemp(deviceID, timestamp);
         }
@@ -59,7 +69,9 @@ public class DeviceController {
     }
 
     public boolean validateInput(String[] inputStrings){
-        if(inputStrings.length != 4 || !(inputStrings[2].equals("'Temperature'")))
+        if(inputStrings.length != 4 || inputStrings[0].length() == 0 ||
+        inputStrings[1].length() == 0 || inputStrings[2].length() == 0 || 
+        inputStrings[3].length() == 0 || !(inputStrings[2].equals("'Temperature'")))
             return false;
         return true;
     }
@@ -72,22 +84,17 @@ public class DeviceController {
 
     public void addToErrors(String resp){
         Error error = new Error();
-       /* StringBuilder sb = new StringBuilder();
-        if(errorRepository.findbyError_id(1) != null)
+        StringBuilder sb = new StringBuilder();
+        if(errorRepository.existsByErrorid(1))
         {
-            System.out.println("Inside if condition");
-            System.out.println(errorRepository.findById(1).toString());
             Optional<Error> ent = errorRepository.findById(1);
-            System.out.println(ent.toString());
-            sb.append(ent.get().getError_id());
+            sb.append(ent.get().getError_txt()).append(",");
             errorRepository.deleteById(1);
         }
-        else {
-            sb.append(resp);
-        }
-        System.out.println("Adding finally");
-        error.setError_id(1);
+        sb.append(resp);
+        error.setErrorid(1);
         error.setError_txt(sb.toString());
-        errorRepository.save(error); */
+        errorRepository.save(error); 
+    }
 
 }
